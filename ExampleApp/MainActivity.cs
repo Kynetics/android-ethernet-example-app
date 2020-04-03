@@ -1,4 +1,8 @@
-﻿using System;
+﻿/*
+ *  Copyright (C)  2020 Kynetics, LLC
+ *  SPDX-License-Identifier: Apache-2.0
+ */
+using System;
 using System.Collections.Generic;
 using Android.App;
 using Android.OS;
