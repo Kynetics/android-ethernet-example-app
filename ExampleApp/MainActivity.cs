@@ -80,24 +80,27 @@ namespace ExampleApp
             {
                 return;
             }
-           
 
             if (ipConfiguration.GetIpAssignment() == IpConfiguration.IpAssignment.Dhcp)
             {
                 radio_dhcp.Checked = true;
             }
-            else
+            else if(ipConfiguration.StaticIpConfiguration != null)
             {
                 radio_static.Checked = true;
                 if (ipConfiguration.StaticIpConfiguration.IpAddress != null) {
                     ipaddress.Text = ipConfiguration.StaticIpConfiguration.IpAddress.ToString();
-                }
+                } else 
                 gateway.Text = ipConfiguration.StaticIpConfiguration.Gateway.HostAddress;
                 if (ipConfiguration.StaticIpConfiguration.DnsServers.Count > 0)
                 {
                     dns.Text = ipConfiguration.StaticIpConfiguration.DnsServers[0].HostAddress;
                 }
+            } else
+            {
+                Toast.MakeText(this, "Interface not configured", ToastLength.Long).Show();
             }
+
         }
 
         private IpConfiguration GetConf()
