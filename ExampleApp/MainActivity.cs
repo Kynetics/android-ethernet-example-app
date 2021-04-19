@@ -25,7 +25,6 @@ namespace ExampleApp
         EditText ipaddress;
         EditText gateway;
         EditText dns;
-        EditText name;
         RadioButton radio_get;
         RadioButton radio_set;
         RadioButton radio_static;
@@ -33,12 +32,12 @@ namespace ExampleApp
         Button set_button;
         Button get_button;
         SystemEthernetManager eth;
+        String interfaceName = "";
         protected override void OnCreate(Bundle savedInstanceState)
         {
             base.OnCreate(savedInstanceState);
             Xamarin.Essentials.Platform.Init(this, savedInstanceState);
             SetContentView(Resource.Layout.activity_main);
-
             Android.Support.V7.Widget.Toolbar toolbar = FindViewById<Android.Support.V7.Widget.Toolbar>(Resource.Id.toolbar);
             SetSupportActionBar(toolbar);
 
@@ -56,7 +55,6 @@ namespace ExampleApp
             ipaddress = FindViewById<EditText>(Resource.Id.ip_address);
             gateway = FindViewById<EditText>(Resource.Id.gateway);
             dns = FindViewById<EditText>(Resource.Id.dns);
-            name = FindViewById<EditText>(Resource.Id.interface_name);
 
             radio_get.Click += RadioSetGetButtonClick;
             radio_set.Click += RadioSetGetButtonClick;
@@ -69,8 +67,26 @@ namespace ExampleApp
             get_button.Visibility = ViewStates.Gone;
             set_button.Visibility = ViewStates.Gone;
 
+            Spinner spinner = FindViewById<Spinner>(Resource.Id.spinner);
+
+            var adapter = new ArrayAdapter<string>(this,
+           Android.Resource.Layout.SimpleSpinnerItem, eth.GetAvailableInterfaces());
+
+            adapter.SetDropDownViewResource(Android.Resource.Layout.SimpleSpinnerDropDownItem);
+            spinner.Adapter = adapter;
+
+            spinner.ItemSelected += new EventHandler<AdapterView.ItemSelectedEventArgs>(spinner_ItemSelected);
 
 
+        }
+
+        private void spinner_ItemSelected(object sender, AdapterView.ItemSelectedEventArgs e)
+        {
+            Spinner spinner = (Spinner)sender;
+            interfaceName = spinner.GetItemAtPosition(e.Position).ToString();
+            Toast.MakeText(this, "Selected " + interfaceName, ToastLength.Long).Show();
+            get_button.Enabled = true;
+            set_button.Enabled = true;
         }
 
         private void GetButtonClick(object sender, EventArgs e)
@@ -90,8 +106,11 @@ namespace ExampleApp
                 radio_static.Checked = true;
                 if (ipConfiguration.StaticIpConfiguration.IpAddress != null) {
                     ipaddress.Text = ipConfiguration.StaticIpConfiguration.IpAddress.ToString();
-                } else 
-                gateway.Text = ipConfiguration.StaticIpConfiguration.Gateway.HostAddress;
+                } 
+                if (ipConfiguration.StaticIpConfiguration.Gateway != null)
+                {
+                    gateway.Text = ipConfiguration.StaticIpConfiguration.Gateway.HostAddress;
+                }
                 if (ipConfiguration.StaticIpConfiguration.DnsServers.Count > 0)
                 {
                     dns.Text = ipConfiguration.StaticIpConfiguration.DnsServers[0].HostAddress;
@@ -107,11 +126,18 @@ namespace ExampleApp
         {
             try
             {
-                return eth.GetConfiguration(name.Text);
+                if (Android.OS.Build.VERSION.SdkInt >= Android.OS.BuildVersionCodes.P)
+                {
+                    return eth.GetConfiguration(interfaceName);
+                }
+                else
+                {
+                    return eth.Configuration;
+                }
             }
             catch (Exception ex)
             {
-                Toast.MakeText(this, String.Format("Interface named {0} not found", name.Text), ToastLength.Long).Show();
+                Toast.MakeText(this, String.Format("Interface named {0} not found", interfaceName), ToastLength.Long).Show();
                 Log.Warn(TAG, "GetConf error", ex);
                 return null;
             }
@@ -147,11 +173,18 @@ namespace ExampleApp
         {
             try
             {
-                eth.SetConfiguration(name.Text, newConf);
+                if (Android.OS.Build.VERSION.SdkInt >= Android.OS.BuildVersionCodes.P)
+                {
+                    eth.SetConfiguration(interfaceName, newConf);
+                }
+                else
+                {
+                    eth.Configuration = newConf;
+                }
             } catch (Exception e)
             {
                 Toast.MakeText(this, "Error on ethernet configuration", ToastLength.Long).Show();
-                Log.Warn(TAG, "SetConf error", e);
+                Log.Warn(TAG, "SetConf error", e);                
             }
 
         }

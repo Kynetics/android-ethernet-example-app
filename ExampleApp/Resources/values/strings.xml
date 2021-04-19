@@ -1,4 +1,6 @@
 <resources>
     <string name="app_name">Ethernet Handler</string>
     <string name="action_settings">Settings</string>
+    <string name="interface_name">Interface name</string>
+
 </resources>
